@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+  Android 包模板（M8）。
+
+  注意：本文件只在 ANDROID 构建时生效（CMake 的 QT_ANDROID_PACKAGE_SOURCE_DIR
+  指向本目录），不影响桌面构建。当前开发机没有装 Android SDK/NDK，
+  这份清单与配套的 TransferService.java 尚未在真机上验证。
+
+  关键权限逐条说明：
+    INTERNET / ACCESS_NETWORK_STATE       TCP 控制与数据通道
+    ACCESS_WIFI_STATE / CHANGE_WIFI_MULTICAST_STATE
+                                          Android 默认丢弃组播包，必须持有
+                                          WifiManager.MulticastLock（代码里已做）
+    NEARBY_WIFI_DEVICES                   Android 13+ 读取 WiFi 信息需要
+    FOREGROUND_SERVICE(+_DATA_SYNC)       切后台/锁屏后继续传，否则系统会冻结进程
+    POST_NOTIFICATIONS                    Android 13+ 通知需用户授权
+    MANAGE_EXTERNAL_STORAGE               Android 11+ 想用任意目录（而非仅应用专属目录）
+                                          读写文件就必须有，见 src/app/AndroidStorage.cpp
+    READ/WRITE_EXTERNAL_STORAGE           给 Android 9/10 用的旧版运行时权限
+
+  `-- %%INSERT_APP_LIB_NAME%% --` 这类占位符由 Qt 构建系统在打包时替换，不要手改。
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="org.qtproject.example.qdownload"
+    android:installLocation="auto"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES"
+        android:usesPermissionFlags="neverForLocation" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- 存储：Android 11 起公共目录要靠 MANAGE_EXTERNAL_STORAGE 才能用 File API 读写，
+         没有它只能读写本应用专属目录（设置里的内置目录浏览器会据此收敛可选范围）。
+         READ/WRITE_EXTERNAL_STORAGE 是给 Android 9/10 用的（旧版运行时权限），
+         maxSdkVersion 卡住是为了不在新系统上再申请已被取代的权限。 -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
+
+    <application
+        android:name="org.qtproject.qt.android.bindings.QtApplication"
+        android:label="qdownload"
+        android:hardwareAccelerated="true"
+        android:allowBackup="false"
+        android:requestLegacyExternalStorage="true">
+
+        <activity
+            android:name="org.qtproject.qt.android.bindings.QtActivity"
+            android:configChanges="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|layoutDirection|locale|fontScale|keyboard|keyboardHidden|navigation|mcc|mnc|density"
+            android:launchMode="singleTop"
+            android:screenOrientation="unspecified"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <meta-data android:name="android.app.lib_name"
+                android:value="-- %%INSERT_APP_LIB_NAME%% --" />
+            <meta-data android:name="android.app.arguments"
+                android:value="-- %%INSERT_APP_ARGUMENTS%% --" />
+        </activity>
+
+        <!-- 传输期间常驻的前台服务，见 android/src/.../TransferService.java -->
+        <service
+            android:name="org.qtproject.example.qdownload.TransferService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+    </application>
+
+    <!-- 不要写 <uses-sdk>：AGP 9.0 起禁止在 manifest 里指定 minSdk/targetSdk
+         （报 "The <uses-sdk> tag was detected ... no longer allowed for controlling SDK versions"）。
+         版本改由 CMakeLists 里的 QT_ANDROID_MIN_SDK_VERSION / QT_ANDROID_TARGET_SDK_VERSION
+         下发到生成的 gradle.properties（qtMinSdkVersion / qtTargetSdkVersion）。 -->
+</manifest>

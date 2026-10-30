@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=qdownload
+GenericName=LAN File Transfer
+Comment=局域网文件互传（Windows / Linux / Android）
+Exec=qdownload %u
+Icon=qdownload
+Terminal=false
+Categories=Network;FileTransfer;Qt;
+Keywords=LAN;transfer;share;file;局域网;互传;
+StartupNotify=false

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  应用图标。Linux 打包脚本会把它装到
+  <前缀>/share/icons/hicolor/scalable/apps/qdownload.svg，
+  由 packaging/linux/qdownload.desktop 引用（Icon=qdownload）。
+
+  与托盘图标（qml/assets/icons/tray.svg）保持同一套视觉：蓝底圆角 + 上下双箭头。
+  缩放靠矢量，不预生成 PNG，省掉一组位图资源。
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4C86FE"/>
+      <stop offset="1" stop-color="#2A5FD8"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#bg)"/>
+  <g stroke="#FFFFFF" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M22 15 L22 45"/>
+    <path d="M22 45 L15 37"/>
+    <path d="M22 45 L29 37"/>
+    <path d="M42 49 L42 19"/>
+    <path d="M42 19 L35 27"/>
+    <path d="M42 19 L49 27"/>
+  </g>
+</svg>
