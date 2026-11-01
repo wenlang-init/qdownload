@@ -44,8 +44,13 @@ Popup {
     parent: Overlay.overlay
     z: 5
 
+    // 高版本 Android 强制 edge-to-edge，窗口一直铺到状态栏 / 导航栏底下。
+    // 居中前先把这两条扣掉，否则最底下那排「确认/取消」会被系统栏压住点不到
+    readonly property real safeTop: SafeArea.margins.top
+    readonly property real safeBottom: SafeArea.margins.bottom
+
     width: Overlay.overlay ? Math.min(Overlay.overlay.width - 24, 460) : 440
-    height: Overlay.overlay ? Math.min(Overlay.overlay.height - 40, 640) : 600
+    height: Overlay.overlay ? Math.min(Overlay.overlay.height - 40 - safeTop - safeBottom, 640) : 600
     anchors.centerIn: Overlay.overlay
 
     background: Rectangle {

@@ -17,6 +17,17 @@ ApplicationWindow {
     // 设计文档 §8.1：900dp 断点，两种布局共用同一批页面组件
     readonly property bool wide: width >= Theme.bpWide
 
+    // ---- 系统栏避让（Android 高版本打孔屏）----
+    // Android 15（targetSdk 35+）起强制 edge-to-edge，窗口铺满整屏，状态栏、挖孔、
+    // 手势条直接盖在内容上；低版本系统没有这条强制规则，Qt 会自己把窗口内缩，所以
+    // 只有高版本才看得见「界面被任务栏压住」。Qt 6.9+ 把平台 insets 经 SafeArea
+    // 送到 QML（QWindow::safeAreaMargins 已换算成逻辑像素，不要再除 dpr）。
+    // 平台不提供时全为 0，桌面端布局不受影响。
+    readonly property real safeTop: SafeArea.margins.top
+    readonly property real safeBottom: SafeArea.margins.bottom
+    readonly property real safeLeft: SafeArea.margins.left
+    readonly property real safeRight: SafeArea.margins.right
+
     /// 窗口是否“真的在前台”：最小化时 visible 仍是 true，不能只看它
     readonly property bool windowActive: visible && visibility !== Window.Minimized && active
 
@@ -113,7 +124,8 @@ ApplicationWindow {
     }
 
     header: Rectangle {
-        implicitHeight: 52 + (App.discoveryOk ? 0 : 26)
+        // 顶部再垫一条状态栏/挖孔高度，背景色顺势铺到屏幕最上沿
+        implicitHeight: 52 + (App.discoveryOk ? 0 : 26) + root.safeTop
         color: Theme.surface
 
         Rectangle {
@@ -125,6 +137,9 @@ ApplicationWindow {
 
         ColumnLayout {
             anchors.fill: parent
+            anchors.topMargin: root.safeTop
+            anchors.leftMargin: root.safeLeft
+            anchors.rightMargin: root.safeRight
             spacing: 0
 
             RowLayout {
@@ -203,6 +218,9 @@ ApplicationWindow {
 
     Loader {
         anchors.fill: parent
+        // 横屏时挖孔大多在侧边，内容区跟着往里让一点
+        anchors.leftMargin: root.safeLeft
+        anchors.rightMargin: root.safeRight
         sourceComponent: root.wide ? wideLayout : narrowLayout
     }
 
@@ -258,6 +276,15 @@ ApplicationWindow {
                 if (App.demoTransfers)
                     expanded = true;
             }
+        }
+
+        // 底部让位：手势条 / 三键导航栏会盖住 footer，垫一条同色空白，
+        // 免得状态行和抽屉里的按钮被系统栏压住点不到
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: root.safeBottom
+            visible: root.safeBottom > 0
+            color: Theme.surfaceAlt
         }
     }
 
@@ -385,9 +412,10 @@ ApplicationWindow {
         anchors.centerIn: parent
         width: Math.min(420, root.width - 2 * Theme.gapL)
         // 高度 = 理想值（标题栏 + 内容自然高 + 底栏）再跟可用区取小。
-        // 不限高的話内容一多就把底部按钮顶到窗口外，「关闭」根本点不到
+        // 不限高的話内容一多就把底部按钮顶到窗口外，「关闭」根本点不到。
+        // 可用区还要扣掉状态栏 / 导航栏：高版本 Android 是 edge-to-edge，窗口高度是全屏高度
         height: Math.max(260,
-                         Math.min(root.height - 2 * Theme.gapL,
+                         Math.min(root.height - 2 * Theme.gapL - root.safeTop - root.safeBottom,
                                   header.implicitHeight + 2 * padding
                                   + settingsBody.implicitHeight
                                   + settingsFooter.implicitHeight
@@ -1112,6 +1140,7 @@ ApplicationWindow {
         z: 2000
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: Theme.gapL
+        // 别落进手势条区域：那块是系统接管的手势热区
+        anchors.bottomMargin: Theme.gapL + root.safeBottom
     }
 }

@@ -13,8 +13,12 @@ Dialog {
     modal: true
     visible: Qt.application.arguments.indexOf("--demo-trusted") >= 0
     anchors.centerIn: parent
+    // edge-to-edge 下窗口会铺到状态栏 / 导航栏底下，居中高度先把这两条让出来
+    readonly property real safeTop: SafeArea.margins.top
+    readonly property real safeBottom: SafeArea.margins.bottom
+
     width: Math.min(460, (parent ? parent.width : 460) - 2 * Theme.gapL)
-    height: Math.min(420, (parent ? parent.height : 420) - 2 * Theme.gapL)
+    height: Math.min(420, (parent ? parent.height : 420) - 2 * Theme.gapL - safeTop - safeBottom)
     padding: Theme.gapL
 
     background: Rectangle {
